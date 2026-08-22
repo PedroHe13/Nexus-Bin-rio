@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <!-- Configuração de codificação de caracteres para suportar acentuação (pt-BR) -->
+    <meta charset="UTF-8">
+    <!-- Configuração de viewport para responsividade e bloqueio de zoom em dispositivos móveis -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Título exibido na aba do navegador -->
+    <title>Nexus Binário</title>
+    <!-- Importação das fontes Fredoka e Press Start 2P através do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Importação do arquivo de estilos externo (CSS) -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Camadas de fundo animadas da aplicação -->
+    <!-- Fundo com gradiente animado -->
+    <div id="dynamic-bg"></div>
+    <!-- Padrão sobreposto de listras para textura visual -->
+    <div id="pattern-bg"></div>
+
+    <!-- OVERLAY CONFIGURAÇÕES DA PARTIDA -->
+    <!-- Modal que aparece antes de iniciar o jogo para definir as regras -->
+    <div class="modal-overlay" id="match-settings-modal">
+        <div class="modal-card">
+            <!-- Título do modo selecionado -->
+            <h2 id="modal-mode-title" style="text-transform: uppercase; margin-top: 0;">Modo Escolhido</h2>
+            
+            <!-- Seletor da direção da conversão matemática -->
+            <label style="font-weight:bold; display:block; text-align:left;">Direção da Conversão:</label>
+            <select id="dir-select">
+                <option value="misto">Misto (Ida e Volta)</option>
+                <option value="to-base" id="opt-to-base">Decimal para a Base</option>
+                <option value="from-base" id="opt-from-base">Base para Decimal</option>
+            </select>
+
+            <!-- Seletor de nível de dificuldade (afeta tempo e vidas) -->
+            <label style="font-weight:bold; display:block; text-align:left;">Dificuldade:</label>
+            <select id="diff-select" onchange="updateTorreTimeLimit()">
+                <option value="easy">Fácil (Mais Vidas/Tempo)</option>
+                <option value="medium">Médio (Padrão)</option>
+                <option value="hard">Difícil (Modo Turbo)</option>
+            </select>
+
+            <!-- Seletor do tipo de perguntas a serem feitas na partida -->
+            <label style="font-weight:bold; display:block; text-align:left;">Tipo de Jogo:</label>
+            <select id="type-select" onchange="toggleTorreSettings()">
+                <option value="sortido">Números Sortidos</option>
+                <option value="quiz">Quiz Teórico</option>
+                <option value="torre">Torre de Desafios (Cego)</option>
+            </select>
+
+            <!-- Configurações específicas para o modo 'Torre de Desafios' -->
+            <div id="torre-settings" style="display: none; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 10px; border: 3px dashed var(--border-color); margin-bottom: 15px;">
+                <label style="font-weight:bold; display:block; text-align:left;">Tempo Máximo (Segundos):</label>
+                <input type="number" id="torre-time" min="30" max="120" value="60" placeholder="Máx 120s" style="margin-bottom:5px;">
+                <p id="torre-time-msg" style="font-size: 0.9rem; margin: 0; color: #d90429; font-weight: bold;"></p>
+            </div>
+
+            <!-- Botões de ação do modal: Iniciar ou Cancelar -->
+            <button class="btn" style="background:var(--btn-hover);" onclick="startGameFromModal()">INICIAR PARTIDA</button>
+            <button class="btn" style="background:#ff4d4d; color:#fff;" onclick="closeModal()">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- TELA PRINCIPAL -->
+    <!-- Menu principal onde o usuário aterrissa ao abrir o jogo -->
+    <div id="main-menu" class="screen active">
+        <!-- Título principal -->
+        <h1>NEXUS B1NÁR10</h1>
+        
+        <!-- Mascote robô decorativo montado com divs -->
+        <div class="robot-container">
+            <div class="robot-antenna"></div>
+            <div class="robot-head">
+                <div class="robot-screen">
+                    <span class="binary-eye">1</span>
+                    <span class="binary-eye">0</span>
+                </div>
+            </div>
+            <div class="robot-body"></div>
+            <div class="robot-wheels"><div class="robot-wheel"></div><div class="robot-wheel"></div></div>
+        </div>
+
+        <!-- Botões de navegação principal -->
+        <button class="btn" onclick="showScreen('play-menu')">JOGAR AGORA</button>
+        <button class="btn" onclick="showScreen('lesson-menu'); resetLessonMenu();">CENTRAL DE ESTUDOS</button>
+        <button class="btn" onclick="showScreen('options-menu')">CONFIGURAÇÕES</button>
+    </div>
+
+    <!-- MENU DE JOGO -->
+    <!-- Tela para escolha do sistema numérico da partida -->
+    <div id="play-menu" class="screen">
+        <h2 style="text-transform: uppercase;">Escolha o Sistema</h2>
+        <!-- Botões para selecionar a base de conversão que abre o modal de opções -->
+        <button class="btn" onclick="openMatchSettings('Binário')">Base Binária (2)</button>
+        <button class="btn" onclick="openMatchSettings('Hexadecimal')">Base Hexadecimal (16)</button>
+        <button class="btn" onclick="openMatchSettings('Octal')">Base Octal (8)</button>
+        <!-- Botão para voltar ao menu principal -->
+        <button class="btn" onclick="showScreen('main-menu')" style="margin-top:20px; background:#ccc;">VOLTAR AO MENU</button>
+    </div>
+
+    <!-- GAMEPLAY (TELA DO JOGO EM ANDAMENTO) -->
+    <!-- A interface onde o usuário responde perguntas e vê pontuação -->
+    <div id="game-screen" class="screen">
+        <!-- HUD (Heads-Up Display) contendo as informações da partida -->
+        <div class="game-hud">
+            <div>Pontos: <strong id="score">0</strong></div>
+            <div id="timer">30</div>
+            <div id="hearts-container">❤️❤️❤️</div>
+        </div>
+        
+        <!-- Títulos dinâmicos com a pergunta atual -->
+        <h2 id="game-title" style="text-transform: uppercase;">Convertendo...</h2>
+        <h3 id="question-number" style="text-align: center; font-size: 1.6rem; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 10px; border: 3px dashed var(--border-color); width: 100%;">...</h3>
+        
+        <!-- Área de input (digitação) para modos de conversão matemática -->
+        <div id="conversion-input-area" style="width: 100%; text-align: center;">
+            <input type="text" id="answer-input" placeholder="Digite sua resposta..." autocomplete="off">
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 5px;">
+                <button class="btn" style="background:#00f2fe; margin:0;" onclick="checkAnswer()">ENVIAR</button>
+                <button class="btn" id="btn-hint" style="background:#ffea00; margin:0; flex: 0.8;" onclick="useHint()">💡 DICA</button>
+            </div>
+            <!-- Exibição do texto da dica solicitada -->
+            <div id="hint-display"></div>
+        </div>
+
+        <!-- Opções de múltipla escolha para o modo "Quiz Teórico" -->
+        <div id="quiz-options">
+            <button class="btn quiz-btn" onclick="checkQuizAnswer(0)" id="q-opt-0">A</button>
+            <button class="btn quiz-btn" onclick="checkQuizAnswer(1)" id="q-opt-1">B</button>
+            <button class="btn quiz-btn" onclick="checkQuizAnswer(2)" id="q-opt-2">C</button>
+        </div>
+
+        <!-- BLOCO DE NOTAS INTELIGENTE (CALCULADORA VARAL) -->
+        <!-- Uma ferramenta de auxílio matemático ativada por clique -->
+        <button class="btn" style="background:#ccc; margin-top:15px; font-size:0.9rem;" onclick="toggleNotepad()">📝 ABRIR CALCULADORA VARAL</button>
+        <div id="notepad-container">
+            <h4 id="calc-title" style="margin:0; text-transform:uppercase;">Calculadora Varal</h4>
+            <p style="font-size:0.8rem; margin: 5px 0;">Clique nos quadrados para alternar entre 1 e 0.</p>
+            <!-- Grid dinâmico populado via JS conforme a base escolhida -->
+            <div id="calc-grid" class="varal-grid">
+                <!-- Gerado por JS -->
+            </div>
+            <!-- Exibição do resultado do auxílio calculador -->
+            <p id="calc-result-container" style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">Resultado: <span id="calc-sum" style="color:#d90429;">0</span></p>
+            <textarea placeholder="Rascunho livre..." style="resize:none; height:70px; margin-top:5px; font-size:1rem;"></textarea>
+        </div>
+
+        <!-- Botão para abortar a partida em andamento -->
+        <button class="btn" style="background:#ff4d4d; color:#fff; margin-top:20px;" onclick="endGame(true)">DESISTIR DA PARTIDA</button>
+    </div>
+
+    <!-- TELA DE FIM DE JOGO -->
+    <!-- Mostra resultados ao acabar o tempo ou vidas -->
+    <div id="game-over-screen" class="screen">
+        <h2 style="font-size: 2.5rem; margin-bottom: 0;">FIM DE JOGO</h2>
+        <div class="stats-box">
+            <h3 id="go-mode" style="margin-top:0; font-size: 1.5rem; text-transform: uppercase;">Modo</h3>
+            <p style="font-size:1.2rem;"><strong>Pontuação Final:</strong> <br><span id="go-score" style="font-size:3rem; color:#d90429; font-weight:bold; -webkit-text-stroke: 1px var(--border-color); text-shadow: 3px 3px 0 var(--border-color);">0</span></p>
+            <p><strong>Dificuldade:</strong> <span id="go-diff" style="font-weight:bold;">Médio</span></p>
+        </div>
+        <!-- Recurso para salvar screenshot do resultado do jogador -->
+        <button class="btn" style="background: #a8dadc;" onclick="saveScorePNG()">📸 SALVAR PONTUAÇÃO (PNG)</button>
+        <button class="btn" onclick="showScreen('main-menu')">VOLTAR AO MENU</button>
+    </div>
+
+    <!-- AULAS COMPLETAS (CENTRAL DE ESTUDOS) -->
+    <!-- Seção de conteúdos teóricos para aprendizado dos sistemas numéricos -->
+    <div id="lesson-menu" class="screen">
+        <h2 style="text-transform: uppercase;">Central de Estudos</h2>
+        
+        <!-- Container dos botões de seleção de aula -->
+        <div id="lesson-cards-container">
+            <button class="lesson-card-btn" onclick="openLesson('l-bin-dec')">🤖 Base Binária ↔ Decimal</button>
+            <button class="lesson-card-btn" onclick="openLesson('l-octal')">🐙 Base Octal</button>
+            <button class="lesson-card-btn" onclick="openLesson('l-hex')">🎨 Base Hexadecimal</button>
+        </div>
+
+        <!-- Módulo de aula: Binário para Decimal -->
+        <div id="l-bin-dec" class="lesson-content">
+            <h3 style="text-align:center; font-size:1.5rem;">CONVERSÃO DE BINÁRIO PARA DECIMAL (E VICE-VERSA)</h3>
+            <p>Os computadores só entendem dois estados (ligado 1 ou desligado 0) porque funcionam com impulsos elétricos. Já nós, humanos, usamos a base 10 (decimal) porque temos 10 dedos nas mãos para contar.</p>
+            <!-- Detalhes do método do varal posicional -->
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px;">De Binário para Decimal (Método do Varal Posicional)</h4>
+            <p>Pense no sistema posicional como um varal. Cada posição de um dígito tem um peso que é sempre o dobro do vizinho da direita.</p>
+            <p>Vamos converter o binário <strong>100101</strong>:</p>
+            <ul><li>Escreva o número binário bem espaçado no papel: 1 0 0 1 0 1</li><li>Monte o "varal de potências de 2" acima dele. Comece pela direita com o número 1, e vá dobrando para a esquerda: 1, 2, 4, 8, 16, 32:</li></ul>
+            <table class="lesson-table"><tr><th>Varal (Pesos)</th><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td>1</td></tr><tr><th>Seu Número</th><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td></tr></table>
+            <p>Multiplique o número de cima pelo de baixo (ou simplesmente ignore onde tem 0 e guarde onde tem 1):</p>
+            <ul><li>Tem 1 sob o 32 -> Guarda 32</li><li>Tem 0 sob o 16 -> Ignora (dá 0)</li><li>Tem 0 sob o 8 -> Ignora (dá 0)</li><li>Tem 1 sob o 4 -> Guarda 4</li><li>Tem 0 sob o 2 -> Ignora (dá 0)</li><li>Tem 1 sob o 1 -> Guarda 1</li></ul>
+            <p>Some os números que você guardou: 32 + 4 + 1 = 37</p>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> O binário 100101 é igual a 37 em decimal!</p>
+
+            <!-- Detalhes do método de caixinhas -->
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px; margin-top:30px;">De Decimal para Binário (Método das Caixinhas - Sem fazer divisão!)</h4>
+            <p>Você precisa descobrir como "construir" um número decimal usando apenas os tijolos do nosso varal (16, 8, 4, 2, 1). Vamos converter o número <strong>13</strong>:</p>
+            <ul><li>Desenhe as caixinhas de pesos de trás para frente até chegar a um número que passe de 13. O 16 é maior que 13, então não podemos usá-lo.</li><li>Agora, pergunte: "Quais desses números somados dão exatamente 13?"
+                    <ul><li>Eu consigo usar o 8? Sim, porque 8 é menor que 13. (Ativamos o 8. Sobram 13 - 8 = 5 para completar).</li><li>Consigo usar o 4 para ajudar a completar os 5 que sobram? Sim, porque 4 é menor que 5. (Ativamos o 4. Sobra 5 - 4 = 1 para completar).</li><li>Consigo usar o 2 para completar o 1 que sobra? Não, porque 2 passa de 1. (Deixamos o 2 desligado).</li><li>Consigo usar o 1? Sim, porque precisamos de exatamente 1. (Ativamos o 1).</li></ul>
+            </li></ul>
+            <table class="lesson-table"><tr><th>Peso</th><td>8</td><td>4</td><td>2</td><td>1</td></tr><tr><th>Status</th><td>Usado (1)</td><td>Usado (1)</td><td>Fora (0)</td><td>Usado (1)</td></tr></table>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> O número decimal 13 em binário é 1101!</p>
+            <p style="font-size:0.9rem; font-style:italic;">(Se preferir o método de dividir sucessivamente por 2, você divide o número e anota o resto. Se for ímpar, o resto é 1; se for par, é 0. Ao final, lê os restos de trás para frente.)</p>
+        </div>
+
+        <!-- Módulo de aula: Octal -->
+        <div id="l-octal" class="lesson-content">
+            <h3 style="text-align:center; font-size:1.5rem;">CONVERSÃO DE BASE OCTAL</h3>
+            <p>O sistema octal usa apenas 8 dígitos (de 0 a 7). Os números 8 e 9 não existem aqui.</p>
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px;">De Octal para Decimal (Multiplicar por 8)</h4>
+            <p>Funciona igual ao binário, mas em vez de dobrar de 2 em 2, as posições aumentam multiplicando por 8: 1, 8, 64, 512...</p>
+            <p>Vamos converter o octal <strong>371</strong>:</p>
+            <table class="lesson-table"><tr><th>Varal (Pesos)</th><td>64 (8x8)</td><td>8</td><td>1</td></tr><tr><th>Seu Número</th><td>3</td><td>7</td><td>1</td></tr><tr><th>Multiplicação</th><td>3 x 64 = 192</td><td>7 x 8 = 56</td><td>1 x 1 = 1</td></tr></table>
+            <p>Some todos os resultados: 192 + 56 + 1 = 249</p>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> O octal 371 equivale a 249 em decimal.</p>
+
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px; margin-top:30px;">De Decimal para Octal (Divisões por 8)</h4>
+            <p>Aqui nós dividimos o número decimal por 8 sucessivamente até o quociente ser 0, guardando sempre o resto da divisão. Vamos converter <strong>177</strong>:</p>
+            <ul><li>Passo 1: 177 ÷ 8 = 22 com resto 1 (pois 22 x 8 = 176, sobra 1).</li><li>Passo 2: Pegue o 22 e divida de novo: 22 ÷ 8 = 2 com resto 6 (pois 2 x 8 = 16, sobram 6 para chegar a 22).</li><li>Passo 3: Pegue o 2 e divida por 8: Como 2 é menor que 8, dá 0 com resto 2.</li></ul>
+            <p>Escreva os restos de trás para frente: 2 6 1.</p>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> 177 em decimal é 261 em octal!</p>
+
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px; margin-top:30px;">💡 Macete Extra de Ouro: Octal para Binário Direto</h4>
+            <p>Como 2³ = 8, cada 1 dígito em octal vira exatamente um grupo de 3 bits em binário. Use a colinha de peso de 3 bits: 4, 2, 1.</p>
+            <p>Vamos converter o octal <strong>27</strong> diretamente para binário:</p>
+            <ul><li>Para o dígito 2: Qual das casas (4, 2, 1) eu ativo para somar 2? Apenas a casa do 2. Fica: 0 1 0.</li><li>Para o dígito 7: Quais casas eu somo para dar 7? Todas (4+2+1=7). Fica: 1 1 1.</li><li>Junte os dois blocos: 010 (do 2) + 111 (do 7) = 010111.</li></ul>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> O octal 27 é igual a 10111 em binário!</p>
+        </div>
+
+        <!-- Módulo de aula: Hexadecimal -->
+        <div id="l-hex" class="lesson-content">
+            <h3 style="text-align:center; font-size:1.5rem;">CONVERSÃO DE BASE HEXADECIMAL</h3>
+            <p>O sistema hexadecimal usa 16 símbolos (0-9 e A-F, onde A=10, B=11, C=12, D=13, E=14, F=15).</p>
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px;">De Hexadecimal para Decimal (Multiplicar por 16)</h4>
+            <p>Vamos converter o hexadecimal <strong>1FA</strong> (1 -> 1 | F -> 15 | A -> 10):</p>
+            <table class="lesson-table"><tr><th>Varal (Pesos)</th><td>256 (16x16)</td><td>16</td><td>1</td></tr><tr><th>Seu Número</th><td>1</td><td>F (15)</td><td>A (10)</td></tr><tr><th>Multiplicação</th><td>1 x 256 = 256</td><td>15 x 16 = 240</td><td>10 x 1 = 10</td></tr></table>
+            <p>Some os resultados: 256 + 240 + 10 = 506</p>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> O hexadecimal 1FA equivale a 506 em decimal!</p>
+
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px; margin-top:30px;">De Decimal para Hexadecimal (Divisões por 16)</h4>
+            <p>Vamos converter <strong>685</strong>:</p>
+            <ul><li>Passo 1: 685 ÷ 16 = 42 com resto 13 (letra D).</li><li>Passo 2: Pegue o 42 e divida: 42 ÷ 16 = 2 com resto 10 (letra A).</li><li>Passo 3: Pegue o 2 e divida por 16: Como 2 é menor que 16, dá 0 com resto 2.</li></ul>
+            <p>Leia os restos de trás para frente: 2, A(10), D(13).</p>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> 685 em decimal é 2AD em hexadecimal!</p>
+
+            <h4 style="border-bottom: 3px dashed var(--border-color); padding-bottom: 5px; margin-top:30px;">💡 Macete Extra de Ouro: Hexadecimal para Binário Direto</h4>
+            <p>Como 2⁴ = 16, cada 1 dígito em hexadecimal vira exatamente um grupo de 4 bits em binário (8, 4, 2, 1). Vamos converter <strong>1B</strong> (B vale 11):</p>
+            <ul><li>Para o dígito 1: Apenas a casa do 1 fica ativa. Fica: 0 0 0 1.</li><li>Para o dígito B (11): Quais dessas casas eu somo para dar 11? 8, 2 e 1 (8+2+1=11). Fica: 1 0 1 1.</li><li>Junte os blocos: 0001 (do 1) + 1011 (do B) = 00011011.</li></ul>
+            <p style="background:var(--btn-hover); padding:10px; border:3px solid var(--border-color); border-radius:10px; color:#000;"><strong>Resultado:</strong> O hexadecimal 1B equivale a 11011 em binário!</p>
+        </div>
+
+        <!-- Controles de navegação dentro das aulas -->
+        <button class="btn" id="btn-back-lessons" onclick="resetLessonMenu()" style="display: none; margin-top:20px; background: #a8dadc;">VOLTAR PARA AULAS</button>
+        <button class="btn" id="btn-back-main" onclick="showScreen('main-menu')" style="margin-top:20px; background:#ccc;">VOLTAR AO MENU</button>
+    </div>
+
+    <!-- MENU DE ACESSIBILIDADE E OPÇÕES GERAIS -->
+    <!-- Controles de som, tema e recursos visuais/acessibilidade -->
+    <div id="options-menu" class="screen">
+        <h2 style="text-transform: uppercase;">Configurações</h2>
+        
+        <!-- Atalho para menu de temas visuais -->
+        <button class="btn" style="background:#4facfe; margin-bottom: 10px;" onclick="showScreen('themes-menu')">🎨 PERSONALIZAR TEMAS</button>
+
+        <!-- Configurações de som e música -->
+        <div class="settings-category">
+            <h3>🎵 Áudio e Som</h3>
+            <button class="btn" id="btn-music" style="margin: 5px 0; background:#ff4d4d; color: #fff;" onclick="toggleMusic()">Desativar Música e Sons</button>
+            <label style="font-weight:bold; display:block; text-align:left; margin-top:10px;">Volume da Música:</label>
+            <input type="range" id="vol-music" min="0" max="1" step="0.1" value="0.5" onchange="window.audioEngine.setMusicVolume(this.value)">
+            <label style="font-weight:bold; display:block; text-align:left;">Volume dos Efeitos:</label>
+            <input type="range" id="vol-sfx" min="0" max="1" step="0.1" value="0.6" onchange="window.audioEngine.setSfxVolume(this.value)">
+        </div>
+
+        <!-- Recursos de contraste e bloqueio de animações (acessibilidade) -->
+        <div class="settings-category">
+            <h3>👁️ Visual e Acessibilidade</h3>
+            <button class="btn" id="btn-contrast" style="margin: 5px 0;" onclick="toggleTema()">Ativar Alto Contraste</button>
+            <button class="btn" id="btn-motion" style="margin: 5px 0;" onclick="toggleMotion()">Desativar Animações</button>
+        </div>
+
+        <!-- Controles de fonte para leitura -->
+        <div class="settings-category">
+            <h3>📖 Leitura e Texto</h3>
+            <label style="font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Tamanho da Fonte Global:</label>
+            <div style="display:flex; width:100%; justify-content:space-between; margin-bottom: 10px;">
+                <button class="btn" style="margin:0; width:48%; background:#a8dadc;" onclick="changeFontSize(-1)">Diminuir [ - ]</button>
+                <button class="btn" style="margin:0; width:48%; background:#a8dadc;" onclick="changeFontSize(1)">Aumentar [ + ]</button>
+            </div>
+            <button class="btn" id="btn-dyslexia" style="margin: 5px 0;" onclick="toggleDyslexia()">Ativar Fonte para Dislexia</button>
+        </div>
+        
+        <!-- Salvar opções -->
+        <button class="btn" onclick="showScreen('main-menu')" style="margin-top:20px; background:#ffea00;">SALVAR E VOLTAR</button>
+    </div>
+
+    <!-- MENU DE SELEÇÃO DE TEMAS VISUAIS -->
+    <div id="themes-menu" class="screen">
+        <h2 style="text-transform: uppercase;">Temas do Sistema</h2>
+        
+        <!-- Temas de Video Game -->
+        <div class="settings-category" style="margin-top: 0; padding-top: 0; border-top: none;">
+            <h3>🕹️ Temas de Games</h3>
+            <div class="theme-grid">
+                <button class="btn theme-btn" style="background:#0000ff; color:#fff;" onclick="applyPredefinedTheme('sonic')">Sonic</button>
+                <button class="btn theme-btn" style="background:#000; color:#fff;" onclick="applyPredefinedTheme('8bit')">Arcade 8-Bit</button>
+            </div>
+        </div>
+        
+        <!-- Temas da Cultura Pop / Geek -->
+        <div class="settings-category">
+            <h3>🦸‍♂️ Temas Geek / Pop</h3>
+            <div class="theme-grid">
+                <button class="btn theme-btn" style="background:#000000; color:#00ff00; border-color:#00ff00;" onclick="applyPredefinedTheme('matrix')">Matrix</button>
+                <button class="btn theme-btn" style="background:#ffb7c5; color:#000;" onclick="applyPredefinedTheme('sakura')">Sakura</button>
+                <button class="btn theme-btn" style="background:#1a1a1a; color:#ffe81f; border-color:#ffe81f;" onclick="applyPredefinedTheme('starwars')">Star Wars</button>
+                <button class="btn theme-btn" style="background:#ff00ff; color:#0ff;" onclick="applyPredefinedTheme('vaporwave')">Retrô 80s</button>
+            </div>
+        </div>
+        
+        <!-- Construtor de Tema com Gradientes Customizados -->
+        <div class="settings-category">
+            <h3>🎨 Gradiente Personalizado</h3>
+            <label style="font-size: 0.9rem; margin-bottom: 5px; display:block;">Escolha as 4 cores do seu fundo:</label>
+            <div class="color-picker-container">
+                <input type="color" id="custom-c1" value="#fceabb"><input type="color" id="custom-c2" value="#f8b500">
+                <input type="color" id="custom-c3" value="#4facfe"><input type="color" id="custom-c4" value="#00f2fe">
+            </div>
+            <button class="btn" style="background:#a8dadc;" onclick="applyCustomTheme()">Aplicar Personalizado</button>
+        </div>
+        <button class="btn" onclick="showScreen('options-menu')" style="margin-top:20px; background:#ccc;">VOLTAR</button>
+    </div>
+
+    <!-- Importação da Lógica Externa (Javascript) -->
+    <script src="script.js"></script>
+</body>
+</html>

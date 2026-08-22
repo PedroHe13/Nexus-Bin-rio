@@ -1,0 +1,199 @@
+/* --- VARIÁVEIS DE TEMA PADRÃO --- */
+/* Definição de cores, paleta do fundo dinâmico e tipografia raiz. As variáveis CSS permitem fácil alteração e suporte a temas */
+:root {
+    --bg-grad-1: #fceabb; --bg-grad-2: #f8b500;
+    --bg-grad-3: #4facfe; --bg-grad-4: #00f2fe;
+    --box-bg: #ffffff; --text-color: #000000;
+    --btn-hover: #ffea00; --border-color: #000000;
+    --btn-bg: #ffffff; --font-main: 'Fredoka', sans-serif;
+}
+
+/* --- TRAVA DE ROLAGEM GLOBAL --- */
+/* Reset básico para box-sizing. Impede que a tela do navegador role (overscroll) e força preenchimento em 100% */
+* { box-sizing: border-box; }
+html, body { overflow: hidden; overscroll-behavior: none; width: 100vw; height: 100vh; margin: 0; padding: 0; }
+ 
+/* Controles de Fonte: Ajusta o tamanho da fonte base e define classes para escalonamento de tamanho via botões (acessibilidade) */
+html { font-size: 16px; transition: font-size 0.3s ease; }
+html.font-level-1 { font-size: 18px; } html.font-level-2 { font-size: 20px; }
+html.font-level-3 { font-size: 22px; } html.font-level-4 { font-size: 24px; }
+
+/* --- CLASSES DE ACESSIBILIDADE --- */
+/* Tema Alto Contraste: Altera as variáveis raiz para tons de cinza/preto visando clareza extrema */
+body.alto-contraste {
+    --bg-grad-1: #111111; --bg-grad-2: #000000; --bg-grad-3: #222222; --bg-grad-4: #000000;
+    --box-bg: #222222; --text-color: #ffffff; --btn-hover: #444444; --border-color: #ffffff; --btn-bg: #111;
+}
+/* Fonte para dislexia: Troca para Comic Sans (apontada como amigável) e aumenta o espaçamento */
+body.fonte-dislexia, body.fonte-dislexia * { font-family: 'Comic Sans MS', 'Arial', sans-serif !important; letter-spacing: 1.5px !important; }
+/* Desabilitar motion/movimentos: Remove animações e transições globais para evitar cinetose */
+body.no-motion * { animation: none !important; transition: none !important; }
+
+/* Corpo da página (setup flexbox para centralizar as telas interativas) */
+body {
+    font-family: var(--font-main); color: var(--text-color);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background-color: transparent; padding: 10px;
+}
+
+/* --- FUNDO DIAGONAL ANIMADO --- */
+/* Cria um gradiente gigante de 4 cores e anima sua posição continuamente criando um efeito fluido e relaxante */
+#dynamic-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+    background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3), var(--bg-grad-4));
+    background-size: 400% 400%; animation: gradientBG 20s ease infinite;
+}
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+ 
+/* Textura em grade/pattern por cima do fundo animado rolando em diagonal */
+#pattern-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+    background-image: linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.05) 75%, rgba(0,0,0,0.05)),
+                      linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.05) 75%, rgba(0,0,0,0.05));
+    background-size: 60px 60px; background-position: 0 0, 30px 30px; animation: scrollPattern 6s linear infinite;
+}
+@keyframes scrollPattern { 0% { background-position: 0 0, 30px 30px; } 100% { background-position: 60px 60px, 90px 90px; } }
+
+/* --- TÍTULO SUPERIOR --- */
+/* Título principal animado do jogo com flutuação leve (float) e visual cartunizado (stroke/text-shadow) */
+h1 {
+    font-size: 4rem; text-transform: uppercase; text-align: center; margin: 10px 0 20px 0;
+    color: #ffea00; letter-spacing: 3px; line-height: 1.1; -webkit-text-stroke: 3px var(--border-color); 
+    text-shadow: 5px 5px 0 #ff4d4d, 10px 10px 0 var(--border-color); animation: logo-float 3.5s ease-in-out infinite; z-index: 10;
+}
+@keyframes logo-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-12px) rotate(2deg); } }
+
+/* Efeitos Erro/Acerto de tela e animação de balanço em caso de resposta incorreta (feedback visual) */
+body.error-aura #dynamic-bg { box-shadow: inset 0 0 100px 30px rgba(255, 0, 0, 0.9); }
+body.success-aura #dynamic-bg { box-shadow: inset 0 0 100px 30px rgba(0, 255, 0, 0.9); }
+.shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake { 10%, 90% { transform: translate3d(-2px,0,0); } 20%, 80% { transform: translate3d(4px,0,0); } 30%, 50%, 70% { transform: translate3d(-6px,0,0); } 40%, 60% { transform: translate3d(6px,0,0); } }
+
+/* --- COMPONENTES UI: ESTILIZAÇÃO GERAL DOS BOTÕES --- */
+/* Botões no formato "Neobrutalismo": borda dura, cores sólidas, sombras deslocadas sem blur */
+.btn {
+    background-color: var(--btn-bg); color: var(--text-color); font-family: inherit; font-size: 1.1rem; font-weight: 700;
+    padding: 12px 24px; margin: 8px 0; border: 4px solid var(--border-color); border-radius: 12px; cursor: pointer; 
+    box-shadow: 6px 6px 0 var(--border-color); width: 100%; max-width: 350px; transition: all 0.1s ease;
+}
+.btn:hover { background-color: var(--btn-hover); transform: translateY(-2px); box-shadow: 8px 8px 0 var(--border-color); }
+.btn:active { transform: translate(6px, 6px); box-shadow: 0 0 0 var(--border-color); }
+
+/* Box das telas principais (screens): Gerencia exibição das camadas de visualização ativas/inativas */
+.screen {
+    display: none; flex-direction: column; align-items: center; width: 100%; max-width: 800px; 
+    background: var(--box-bg); padding: 25px; border: 5px solid var(--border-color); border-radius: 20px;
+    box-shadow: 10px 10px 0 var(--border-color); max-height: 85vh; overflow-y: auto; position: relative; z-index: 10;
+}
+.screen.active { display: flex; }
+
+/* Customização do scrollbar dentro dos contêineres e modais */
+.screen::-webkit-scrollbar { width: 10px; } .screen::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+.screen::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+/* HUD do Jogo: Layout e tipografia para Placar, Relógio e Vidas no topo da gameplay */
+.game-hud { display: flex; justify-content: space-between; width: 100%; font-size: 1.3rem; font-weight: bold; border-bottom: 4px dashed var(--border-color); padding-bottom: 15px; margin-bottom: 15px; }
+#timer { font-size: 3rem; color: #d90429; -webkit-text-stroke: 1.5px var(--border-color); text-shadow: 3px 3px 0 var(--border-color); }
+#hearts-container { font-size: 2.2rem; letter-spacing: 5px; color: #ff0a54; -webkit-text-stroke: 1px var(--border-color); }
+
+/* ROBÔ BASE: O mascote desenhado puramente com CSS utilizando geometrias (border-radius, box-shadow) e flexbox */
+.robot-container { display: flex; flex-direction: column; align-items: center; margin: 10px 0 20px 0; animation: float-fast 4s ease-in-out infinite reverse; }
+.robot-head { width: 140px; height: 100px; background: #4facfe; border: 5px solid var(--border-color); border-radius: 25px; display: flex; justify-content: center; align-items: center; box-shadow: inset -8px -8px 0 rgba(0,0,0,0.15), 6px 6px 0 var(--border-color); z-index: 2; }
+.robot-screen { width: 100px; height: 50px; background: #111; border: 4px solid var(--border-color); border-radius: 10px; display: flex; justify-content: space-evenly; align-items: center; color: #00ff00; font-family: monospace; font-size: 28px; font-weight: bold; }
+.robot-body { width: 90px; height: 60px; background: #00f2fe; border: 5px solid var(--border-color); border-radius: 15px; margin-top: -15px; z-index: 1; box-shadow: inset -6px -6px 0 rgba(0,0,0,0.15), 6px 6px 0 var(--border-color); display: flex; justify-content: center; align-items: center; }
+.robot-wheels { display: flex; justify-content: space-between; width: 130px; margin-top: -20px; z-index: 3; }
+.robot-wheel { width: 35px; height: 35px; background: #555; border: 5px solid var(--border-color); border-radius: 50%; }
+ 
+/* Elementos de Modal e Formulários (Select, Inputs numéricos e Textareas) formatados para o visual Neobrutalista */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+.modal-card { background: var(--box-bg); padding: 30px; border: 5px solid var(--border-color); border-radius: 20px; box-shadow: 10px 10px 0 var(--border-color); max-width: 450px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: center; }
+select, input[type="range"], input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px; margin: 8px 0; border: 4px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 1.1rem; box-shadow: 4px 4px 0 var(--border-color); font-weight: bold; color: var(--text-color); background: var(--box-bg); outline: none; }
+
+/* Contêiners e botões específicos da sessão 'Aulas' */
+#lesson-cards-container { display: flex; flex-direction: column; width: 100%; align-items: center; gap: 10px; margin-top: 15px; }
+.lesson-card-btn { background: var(--box-bg); border: 4px dashed var(--border-color); border-radius: 15px; padding: 15px; width: 100%; max-width: 400px; cursor: pointer; text-align: center; font-family: inherit; font-size: 1.3rem; font-weight: bold; color: var(--text-color); box-shadow: 6px 6px 0 var(--border-color); transition: all 0.2s; }
+.lesson-card-btn:hover { background: var(--btn-hover); transform: translateY(-4px); box-shadow: 8px 8px 0 var(--border-color); }
+
+/* Conteúdo de Texto das aulas (exibição de textos explicativos) e suas tabelas visuais */
+.lesson-content { display: none; text-align: left; background: rgba(0,0,0,0.03); padding: 25px; border-radius: 15px; border: 4px solid var(--border-color); margin-top: 15px; font-size: 1.15rem; line-height: 1.8; width: 100%; box-shadow: inset 4px 4px 0 rgba(0,0,0,0.05); }
+.lesson-table { width: 100%; border-collapse: collapse; margin: 15px 0; background: var(--box-bg); border: 4px solid var(--border-color); text-align: center; font-size: 1.1rem; }
+.lesson-table th, .lesson-table td { border: 2px solid var(--border-color); padding: 12px; font-weight: bold; }
+.lesson-table th { background: rgba(0,0,0,0.08); }
+
+/* Segmentador de categorias para a tela de configurações (ex: Áudio, Visual, Texto) */
+.settings-category { width: 100%; text-align: left; border-top: 4px dashed var(--border-color); padding-top: 15px; margin-top: 15px; }
+ 
+/* Opções de Tema Personalizado e Grid de Temas Prontos */
+.color-picker-container { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.color-picker-container input[type="color"] { width: 100%; height: 50px; border: 4px solid var(--border-color); border-radius: 12px; padding: 0; box-shadow: 4px 4px 0 var(--border-color); }
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.theme-btn { font-size: 1rem; padding: 10px; margin: 0; box-shadow: 4px 4px 0 var(--border-color); }
+
+/* --- BLOCO DE NOTAS INTELIGENTE (CALCULADORA DE AUXÍLIO) --- */
+#notepad-container {
+    width: 100%; border: 3px dashed var(--border-color); border-radius: 15px; padding: 15px;
+    background: rgba(0,0,0,0.05); margin-top: 15px; display: none; text-align: center;
+}
+.varal-grid { display: flex; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+.varal-item { display: flex; flex-direction: column; align-items: center; font-weight: bold; font-size: 0.9rem; }
+ 
+/* O input virou um "botão/bloco" clicável que alterna valores binários */
+.varal-input { 
+    width: 35px; height: 35px; margin-top: 5px; text-align: center; font-family: monospace; 
+    font-size: 1.2rem; font-weight: bold; box-shadow: 3px 3px 0 var(--border-color); border: 3px solid var(--border-color); 
+    border-radius: 8px; cursor: pointer; user-select: none; background: #fff; color: #000;
+    display: flex; justify-content: center; align-items: center;
+}
+/* Efeito de clique do bloco varal */
+.varal-input:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--border-color); }
+
+/* Caixa para exibir a "Dica" dinamicamente baseada na questão */
+#hint-display { display: none; background: #ffea00; padding: 10px; border: 3px solid var(--border-color); border-radius: 10px; font-size: 1.1rem; margin-top: 10px; color: #000; text-align: left;}
+
+/* --- TEMAS CSS (OVERRIDES BASEADOS EM 'data-theme' APLICADOS NO BODY VIA JAVASCRIPT) --- */
+/* Tema SONIC: Velocidade (menos tempo em animações) e azul clássico */
+[data-theme="sonic"] * { transition-duration: 0.1s !important; }
+[data-theme="sonic"] #dynamic-bg { background: linear-gradient(to bottom, #001eff, #00aaff); animation: none; }
+[data-theme="sonic"] #pattern-bg { background-image: linear-gradient(45deg, rgba(255,255,0,0.3) 25%, transparent 25%, transparent 75%, rgba(255,255,0,0.3) 75%, rgba(255,255,0,0.3)), linear-gradient(45deg, rgba(255,255,0,0.3) 25%, transparent 25%, transparent 75%, rgba(255,255,0,0.3) 75%, rgba(255,255,0,0.3)); }
+[data-theme="sonic"] { --box-bg: rgba(255,255,255,0.9); }
+ 
+/* Tema ARCADE 8-BIT: Fontes pixeladas e blocos quadriculados sem arredondamentos */
+[data-theme="8bit"] * { font-family: 'Press Start 2P', cursive !important; border-radius: 0 !important; }
+[data-theme="8bit"] h1 { font-size: 2rem; text-shadow: 4px 4px 0 #000; -webkit-text-stroke: 0; }
+[data-theme="8bit"] .btn { box-shadow: inset -4px -4px 0 rgba(0,0,0,0.4), 4px 4px 0 #000; }
+
+/* Tema MATRIX: Hacker style, letras verdes, fundo preto, brilhos nas caixas */
+[data-theme="matrix"] * { background: #000 !important; color: #0f0 !important; border-color: #0f0 !important; font-family: monospace !important; box-shadow: none !important; }
+[data-theme="matrix"] .screen, [data-theme="matrix"] .modal-card { box-shadow: 0 0 15px #0f0 !important; text-shadow: 0 0 5px #0f0; }
+[data-theme="matrix"] h1 { -webkit-text-stroke: 0; text-shadow: 0 0 15px #0f0; }
+
+/* Tema SAKURA/KAWAII: Cores pastéis, efeito Glassmorphism (vidro) nas telas, bordas suaves */
+[data-theme="sakura"] #dynamic-bg { background: linear-gradient(135deg, #ffdde1, #ee9ca7); animation: none; }
+[data-theme="sakura"] .screen { background: rgba(255,255,255,0.5) !important; backdrop-filter: blur(10px); border-radius: 50px; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+[data-theme="sakura"] .btn { border-radius: 50px; background: rgba(255,255,255,0.8); border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+[data-theme="sakura"] h1 { -webkit-text-stroke: 0; text-shadow: 2px 2px 5px rgba(255,105,180,0.5); color: #fff; }
+
+/* Tema STAR WARS: Espaço estrelado animado, botões em recortes hexagonais e fontes amarelas (estilo crawl inicial) */
+[data-theme="starwars"] #dynamic-bg { background: #050510; animation: none; }
+[data-theme="starwars"] #pattern-bg { display: block; opacity: 0.8; background-image: radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)), radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)), radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)), radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0)), radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0)); background-repeat: repeat; background-size: 200px 200px; animation: starsMove 40s linear infinite; }
+@keyframes starsMove { from { background-position: 0 0; } to { background-position: 0 400px; } }
+[data-theme="starwars"] .screen, [data-theme="starwars"] .modal-card, [data-theme="starwars"] .btn { clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); border-radius: 0 !important; border: 2px solid #00a8ff; background: rgba(0,10,30,0.9) !important; color: #e6e6e6; box-shadow: none; }
+[data-theme="starwars"] .btn { background: rgba(0, 168, 255, 0.1) !important; }
+[data-theme="starwars"] .btn:hover { background: rgba(0, 168, 255, 0.3) !important; }
+[data-theme="starwars"] h1, [data-theme="starwars"] h2, [data-theme="starwars"] h3 { color: #ffe81f !important; text-shadow: none !important; -webkit-text-stroke: 0 !important; letter-spacing: 3px; }
+
+/* Tema VAPORWAVE / RETRO 80S: Cyans intensos, magentas e fontes em itálico */
+[data-theme="vaporwave"] #dynamic-bg { background: linear-gradient(to bottom, #000033, #ff00ff); animation: none; }
+[data-theme="vaporwave"] .screen { border: 2px solid #0ff; box-shadow: 0 0 15px #0ff, inset 0 0 15px #ff00ff; background: rgba(0,0,20,0.8) !important; color: #0ff; border-radius: 0;}
+[data-theme="vaporwave"] h1 { color: #0ff; -webkit-text-stroke: 0; text-shadow: 4px 4px 0px #ff00ff, -2px -2px 0px #0ff !important; font-style: italic;}
+[data-theme="vaporwave"] .btn { background: #ff00ff; color: #fff; border: 2px solid #0ff; box-shadow: 4px 4px 0 #0ff; }
+
+/* Media Queries para Mobile/Responsividade (Ajusta botões e telas para telas pequenas) */
+@media (max-width: 600px) { 
+    h1 { font-size: 2.5rem; margin: 5px 0 15px 0; }
+    .screen, .modal-card { padding: 20px 15px; border-width: 4px; box-shadow: 6px 6px 0 var(--border-color); border-radius: 15px; }
+    .btn { font-size: 1rem; padding: 10px; box-shadow: 4px 4px 0 var(--border-color); }
+    .robot-head { width: 110px; height: 80px; } .robot-screen { width: 80px; height: 40px; font-size: 22px; }
+    .varal-item { font-size: 0.75rem; }
+    .varal-input { width: 30px; height: 30px; font-size: 1rem; }
+}
